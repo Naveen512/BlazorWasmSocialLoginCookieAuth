@@ -1,0 +1,48 @@
+﻿@inject ILocalStorageService _localStorageService;
+@inject IApiLogic _apiLogic
+@inject AuthenticationStateProvider _authStateProvider
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+@code {
+
+    
+    private async Task OnNavigateAsync(NavigationContext args)
+    {
+
+        var auth = await _localStorageService.GetItemAsync<string>("isauthenticated");
+        if (string.IsNullOrEmpty(auth) && args.Path.ToLower().Contains("externalauth=true"))
+        {
+            auth = "true";
+            await _localStorageService.SetItemAsStringAsync("isauthenticated","true");
+        }
+        var user = (await (_authStateProvider as CustomAuthStateProvider)
+        .GetAuthenticationStateAsync()).User;
+
+        if (!string.IsNullOrEmpty(auth) && !user.Identity.IsAuthenticated)
+        {
+            var response = await _apiLogic.UserProfileAsync();
+            if (response.Message == "Success")
+            {
+                (_authStateProvider as CustomAuthStateProvider)
+                .SetAuthInfo(response.UserProfile);
+            }
+            else if (response.Message == "Unauthorized")
+            {
+                await _localStorageService.RemoveItemAsync("isauthenticated");
+            }
+        }
+
+    }
+}

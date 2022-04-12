@@ -1,0 +1,63 @@
+@page "/login"
+@inject IApiLogic _apiLogic
+@inject AuthenticationStateProvider _authStateProvider
+@inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorageService;
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <legend>User Login</legend>
+        <div class="mb-3">
+            <label for="txtEmail" class="form-label">Email</label>
+            <input @bind="loginModel.Email" type="text" class="form-control" id="txtEmail" />
+        </div>
+
+        <div class="mb-3">
+            <label for="txtPassword" class="form-label">Password</label>
+            <input @bind="loginModel.Password" type="password" class="form-control" id="txtPassword" />
+        </div>
+        <button type="button" @onclick="UserLogin" class="btn btn-primary">Login</button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div>
+            <a href="https://localhost:7235/auth/google-login?returnurl=https://localhost:7218/"
+            class="nav-link btn btn-link">
+            Google
+            </a>
+        </div>
+        <div>
+            <a href="https://localhost:7235/auth/microsoft-account-login?returnurl=https://localhost:7218/"
+            class="nav-link btn btn-link">
+            Microsoft Account
+            </a>
+        </div>
+         <div>
+            <a href="https://localhost:7235/auth/twitter-login?returnurl=https://localhost:7218/"
+            class="nav-link btn btn-link">
+            Twitter
+            </a>
+        </div>
+        <div>
+            <a href="https://localhost:7235/auth/facebook-login?returnurl=https://localhost:7218/"
+            class="nav-link btn btn-link">
+            Facebook
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+
+    private async Task UserLogin()
+    {
+        var message = await _apiLogic.LoginAsync(loginModel);
+        if (message == "Success")
+        {
+            await _localStorageService.SetItemAsStringAsync("isauthenticated", "true");
+            _navigationManager.NavigateTo("/",true);
+        }
+    }
+}

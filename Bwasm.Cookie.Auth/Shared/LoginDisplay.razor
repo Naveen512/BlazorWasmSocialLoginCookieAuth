@@ -1,0 +1,27 @@
+@inject AuthenticationStateProvider _authStateProvider
+@inject NavigationManager _navigationManager
+@inject IApiLogic _apiLogic
+@inject ILocalStorageService _localStorageService;
+
+<AuthorizeView>
+    <Authorized>
+        <a href="">@context.User.Identity?.Name!</a>
+        <button type="button"  @onclick="Logout" class="nav-link btn btn-link">Log out</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+@code {
+    private async Task Logout()
+    {
+        var response = await _apiLogic.LogoutAsync();
+        if (response == "Success")
+        {
+            (_authStateProvider as CustomAuthStateProvider).ClearAuthInfo();
+            await _localStorageService.RemoveItemAsync("isauthenticated");
+            _navigationManager.NavigateTo("/", true);
+        }
+
+    }
+}
